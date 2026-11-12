@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Nuxt generated files
+.nuxt/
+.output/
+.data/
+dist/
+
+# Local environment and editor files
+.DS_Store
+.env
+.env.*
+!.env.example
+.vscode/
