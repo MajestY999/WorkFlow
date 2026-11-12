@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SupportRequest } from "~/types/request";
+import type { SupportRequest } from "#shared/types/request";
 defineProps<{ requests: SupportRequest[]; compact?: boolean }>();
 </script>
 

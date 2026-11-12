@@ -180,6 +180,45 @@
   margin: 0 0 20px;
   color: var(--muted);
 }
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: #171532;
+}
+.error-page > strong {
+  color: var(--cyan);
+  font-size: 56px;
+}
+.error-page h1 {
+  margin: 8px 0;
+  font-size: 25px;
+}
+.error-page p {
+  max-width: 440px;
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+.request-actions {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+}
+.action-description {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+.action-server-error {
+  padding: 12px;
+  border: 1px solid rgba(255, 87, 130, 0.6);
+  border-radius: 4px;
+  background: rgba(130, 38, 72, 0.18);
+  line-height: 1.5;
+}
 .profile-page {
   max-width: none;
 }
@@ -359,6 +398,12 @@
 }
 .login-card .text-link {
   font-size: 11px;
+}
+.register-card .stack-form .button {
+  width: 100%;
+}
+.register-card {
+  width: min(100%, 360px);
 }
 .modal-backdrop {
   position: fixed;

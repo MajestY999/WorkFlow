@@ -46,6 +46,28 @@
   align-items: center;
   gap: 10px;
 }
+.logout-button {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 4px;
+  color: #c4c1dc;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.logout-button:hover {
+  color: #fff;
+  background: rgba(57, 54, 111, 0.55);
+}
+.logout-button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.header-error {
+  max-width: 220px;
+  margin: 0;
+  font-size: 11px;
+}
 .profile-link[aria-current="page"] .profile-name {
   color: #fff;
 }
@@ -103,20 +125,6 @@
   stroke-linejoin: round;
   stroke-width: 1.8;
 }
-.notification-count {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 15px;
-  height: 15px;
-  display: grid;
-  place-items: center;
-  border-radius: 99px;
-  color: white;
-  background: var(--pink);
-  font-size: 9px;
-  line-height: 1;
-}
 .notification-panel {
   position: absolute;
   z-index: 15;
@@ -130,60 +138,13 @@
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
 }
 .notification-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 15px 16px;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
 }
-.notification-heading span {
-  color: var(--cyan);
-  font-size: 11px;
-}
-.notification-item {
-  display: grid;
-  grid-template-columns: 8px 1fr;
-  gap: 10px;
-  padding: 13px 16px;
-  border-bottom: 1px solid rgba(57, 54, 111, 0.65);
-}
-.notification-item:hover {
-  background: var(--surface-raised);
-}
-.notification-dot {
-  width: 7px;
-  height: 7px;
-  margin-top: 5px;
-  border-radius: 50%;
-  background: var(--cyan);
-}
-.notification-item strong,
-.notification-item small,
-.notification-item time {
-  display: block;
-}
-.notification-item strong {
-  color: var(--text);
-  font-size: 12px;
-}
-.notification-item small {
-  margin-top: 4px;
-  color: #c4c1dc;
-  font-size: 11px;
-}
-.notification-item time {
-  margin-top: 7px;
+.notification-empty {
+  margin: 0;
+  padding: 18px 16px;
   color: var(--muted);
-  font-size: 10px;
-}
-.notification-all {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 16px;
-  color: var(--cyan) !important;
-  font-size: 11px !important;
-}
-.notification-all:hover {
-  background: var(--surface-raised);
+  font-size: 12px;
 }

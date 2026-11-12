@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RequestStatus } from "~/types/request";
+import type { RequestStatus } from "#shared/types/request";
 defineProps<{ status: RequestStatus }>();
 const classes: Record<RequestStatus, string> = {
   Новая: "badge-new",

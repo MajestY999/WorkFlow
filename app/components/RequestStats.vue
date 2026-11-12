@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RequestStatus, SupportRequest } from "~/types/request";
+import type { RequestStatus, SupportRequest } from "#shared/types/request";
 const props = defineProps<{
   requests: SupportRequest[];
   counts?: Record<RequestStatus, number>;

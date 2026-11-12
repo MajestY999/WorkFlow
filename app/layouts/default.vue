@@ -18,7 +18,6 @@ onMounted(preferences.hydrate);
         </div>
         <slot />
       </main>
-      <AppFooter />
     </div>
   </div>
 </template>

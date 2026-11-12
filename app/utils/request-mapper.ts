@@ -4,7 +4,7 @@ import type {
   RequestPriority,
   RequestStatus,
   SupportRequest,
-} from "~/types/request";
+} from "#shared/types/request";
 
 const requestStatuses: RequestStatus[] = [
   "Новая",
@@ -18,6 +18,20 @@ const requestPriorities: RequestPriority[] = [
   "Высокий",
   "Критический",
 ];
+
+function formatRequestDateTime(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(value)) return value;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Дата не указана";
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
 
 export function mapApiRequest(
   record: ApiRequestRecord,
@@ -43,16 +57,18 @@ export function mapApiRequest(
       lookups?.categories.find((item) => item.id === record.categoryId)?.name ??
       record.category ??
       "Без категории",
-    createdAt: record.createdAt ?? "Дата не указана",
+    createdAt: record.createdAt
+      ? formatRequestDateTime(record.createdAt)
+      : "Дата не указана",
     dueAt: record.dueAt ?? "Срок не назначен",
     description: record.description?.trim() || "Описание не указано.",
     comments: (record.comments ?? []).map((comment) => ({
       author: comment.author || "Оператор",
-      time: comment.time || "",
+      time: comment.time ? formatRequestDateTime(comment.time) : "",
       text: comment.text || "",
     })),
     timeline: (record.timeline ?? []).map((event) => ({
-      time: event.time || "",
+      time: event.time ? formatRequestDateTime(event.time) : "",
       text: event.text || "Изменение заявки",
     })),
   };

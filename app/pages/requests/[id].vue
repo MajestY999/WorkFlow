@@ -1,35 +1,29 @@
 <script setup lang="ts">
 import type {
+  ApiUser,
   ApiRequestRecord,
   RequestPriority,
   RequestStatus,
   SupportRequest,
   UpdateRequestPayload,
-} from "~/types/request";
+} from "#shared/types/request";
 import { getApiErrorMessage, getApiErrorStatus } from "~/utils/api-error";
 import { mapApiRequest } from "~/utils/request-mapper";
 
 const route = useRoute();
 const requestUi = useRequestUiStore();
-const retryAttempt = ref(0);
+const authUser = useAuthUser();
 const isSaving = ref(false);
 const isSendingComment = ref(false);
-const selectedAssignee = ref("");
-const assigneeSelect = ref<HTMLSelectElement | null>(null);
-const assigneeError = ref("");
+const actionMode = ref<"assign" | "status" | null>(null);
+const actionUsers = ref<ApiUser[]>([]);
+const actionError = ref("");
 const comment = ref("");
 const commentError = ref("");
 const commentSuccess = ref("");
 
 const { data, pending, error, refresh } = await useFetch<ApiRequestRecord>(
   () => `/api/requests/${route.params.id}`,
-  {
-    query: computed(() => ({
-      demo: typeof route.query.demo === "string" ? route.query.demo : undefined,
-      delay: typeof route.query.delay === "string" ? route.query.delay : undefined,
-      retry: retryAttempt.value || undefined,
-    })),
-  },
 );
 const lookups = await useRequestLookups();
 const request = computed<SupportRequest | null>(() =>
@@ -44,23 +38,6 @@ const request = computed<SupportRequest | null>(() =>
 const requestError = computed(() =>
   error.value ? getApiErrorMessage(error.value) : "",
 );
-const assigneeButtonLabel = computed(() => {
-  if (request.value?.assignee === "Не назначен") return "Назначить исполнителя";
-  return selectedAssignee.value &&
-    selectedAssignee.value !== request.value?.assignee
-    ? "Сохранить исполнителя"
-    : "Изменить исполнителя";
-});
-
-watch(
-  () => [data.value?.id, data.value?.version, data.value?.assignee] as const,
-  ([, , assignee]) => {
-    selectedAssignee.value =
-      assignee && assignee !== "Не назначен" ? assignee : "";
-  },
-  { immediate: true },
-);
-
 function currentTime() {
   return new Date().toLocaleTimeString("ru-RU", {
     hour: "2-digit",
@@ -76,10 +53,6 @@ function isRequestPriority(value: string): value is RequestPriority {
   return ["Низкий", "Обычный", "Высокий", "Критический"].includes(value);
 }
 
-function isRequestStatus(value: string): value is RequestStatus {
-  return ["Новая", "Назначена", "Ожидает ответа", "Решена"].includes(value);
-}
-
 function updateFailureMessage(failure: unknown) {
   const status = getApiErrorStatus(failure);
   if (status === 409) {
@@ -92,31 +65,37 @@ function updateFailureMessage(failure: unknown) {
 }
 
 async function updateRequest(
-  changes: Pick<UpdateRequestPayload, "status" | "priority" | "assignee">,
-  undo?: {
-    field: "status";
-    previousValue: RequestStatus;
-    value: RequestStatus;
-  } | {
-    field: "priority";
-    previousValue: RequestPriority;
-    value: RequestPriority;
-  },
-) {
-  const previous = data.value;
-  if (!previous || isSaving.value) return;
+  changes: Pick<
+    UpdateRequestPayload,
+    "status" | "priority" | "assignee" | "assigneeId"
+  >,
+  undo?:
+    | {
+        field: "status";
+        previousValue: RequestStatus;
+        value: RequestStatus;
+      }
+    | {
+        field: "priority";
+        previousValue: RequestPriority;
+        value: RequestPriority;
+      },
+      metadata: Pick<UpdateRequestPayload, "comment" | "reason"> = {},
+): Promise<boolean> {
+      const previous = data.value;
+      if (!previous || isSaving.value) return false;
 
   const expectedVersion = previous.version ?? 1;
   const nextStatus =
-    changes.assignee !== undefined && changes.status === undefined
-      ? changes.assignee
+    changes.assigneeId !== undefined && changes.status === undefined
+      ? changes.assigneeId !== null
         ? "Назначена"
         : "Новая"
       : changes.status;
   const timelineEntries = [
     nextStatus ? `Изменён статус на «${nextStatus}»` : "",
     changes.priority ? `Изменён приоритет на «${changes.priority}»` : "",
-    changes.assignee !== undefined
+    changes.assigneeId !== undefined
       ? changes.assignee
         ? `${changes.assignee} назначен исполнителем`
         : "Исполнитель снят с заявки"
@@ -143,24 +122,16 @@ async function updateRequest(
 
   let updated: ApiRequestRecord;
   try {
-    updated = await $fetch<ApiRequestRecord>(
-      `/api/requests/${previous.id}`,
-      {
-        method: "PATCH",
-        body: { ...changes, expectedVersion },
-        query: {
-          demoUpdate:
-            typeof route.query.demoUpdate === "string"
-              ? route.query.demoUpdate
-              : undefined,
-        },
-      },
-    );
+    updated = await $fetch<ApiRequestRecord>(`/api/requests/${previous.id}`, {
+      method: "PATCH",
+      body: { ...changes, ...metadata, expectedVersion },
+    });
   } catch (failure: unknown) {
     data.value = previous;
+    actionError.value = getApiErrorMessage(failure);
     requestUi.showNotice(updateFailureMessage(failure), "error");
     isSaving.value = false;
-    return;
+    return false;
   }
 
   data.value = updated;
@@ -185,6 +156,7 @@ async function updateRequest(
   } finally {
     isSaving.value = false;
   }
+  return true;
 }
 
 function changePriority(event: Event) {
@@ -201,37 +173,40 @@ function changePriority(event: Event) {
   );
 }
 
-function changeStatus(event: Event) {
-  if (!request.value) return;
-  const value = getSelectValue(event);
-  if (!isRequestStatus(value) || value === request.value.status) return;
-  void updateRequest(
-    { status: value },
-    {
-      field: "status",
-      previousValue: request.value.status,
-      value,
-    },
-  );
+async function openAction(
+  mode: "assign" | "status",
+) {
+  actionError.value = "";
+  actionUsers.value = lookups.users.value;
+  if (
+    mode === "assign" &&
+    (authUser.value?.role === "Operator" || authUser.value?.role === "Admin")
+  ) {
+    try {
+      actionUsers.value = await $fetch<ApiUser[]>("/api/users", {
+        query: { includeInactive: "true" },
+      });
+    } catch (failure: unknown) {
+      actionError.value = getApiErrorMessage(failure);
+      return;
+    }
+  }
+  actionMode.value = mode;
 }
 
-function changeAssignee(event: Event) {
-  selectedAssignee.value = getSelectValue(event);
-  assigneeError.value = "";
-}
-
-function saveAssignee() {
-  if (!selectedAssignee.value) {
-    assigneeError.value = "Сначала выберите исполнителя из списка.";
-    assigneeSelect.value?.focus();
-    return;
-  }
-  if (selectedAssignee.value === request.value?.assignee) {
-    assigneeSelect.value?.focus();
-    return;
-  }
-  assigneeError.value = "";
-  void updateRequest({ assignee: selectedAssignee.value });
+async function saveAction(
+  payload: Pick<
+    UpdateRequestPayload,
+    "assignee" | "assigneeId" | "status" | "comment" | "reason"
+  >,
+) {
+  actionError.value = "";
+  const { comment: actionComment, reason, ...changes } = payload;
+  const saved = await updateRequest(changes, undefined, {
+    comment: actionComment,
+    reason,
+  });
+  if (saved) actionMode.value = null;
 }
 
 async function sendComment() {
@@ -250,13 +225,7 @@ async function sendComment() {
       `/api/requests/${request.value.id}/comments`,
       {
         method: "POST",
-        body: { text, author: "Анна Кузнецова" },
-        query: {
-          demoComment:
-            typeof route.query.demoComment === "string"
-              ? route.query.demoComment
-              : undefined,
-        },
+        body: { text },
       },
     );
     data.value = updated;
@@ -274,7 +243,11 @@ async function sendComment() {
 <template>
   <div class="page-content detail-page">
     <NuxtLink class="back-link" to="/requests">← К списку заявок</NuxtLink>
-    <div v-if="pending" class="detail-grid detail-loading" aria-label="Загрузка заявки">
+    <div
+      v-if="pending"
+      class="detail-grid detail-loading"
+      aria-label="Загрузка заявки"
+    >
       <div class="detail-main">
         <section v-for="panel in 3" :key="panel" class="panel">
           <div class="skeleton-list">
@@ -290,13 +263,19 @@ async function sendComment() {
     </div>
     <section v-else-if="error" class="panel detail-error" role="alert">
       <span class="state-icon" aria-hidden="true">ⓘ</span>
-      <h1>{{ error.statusCode === 404 ? "Заявка не найдена" : "Не удалось загрузить заявку" }}</h1>
+      <h1>
+        {{
+          error.statusCode === 404
+            ? "Заявка не найдена"
+            : "Не удалось загрузить заявку"
+        }}
+      </h1>
       <p>{{ requestError }}</p>
       <button
         v-if="error.statusCode !== 404"
         class="button button-primary"
         type="button"
-        @click="retryAttempt++"
+        @click="() => refresh()"
       >
         Повторить загрузку
       </button>
@@ -307,7 +286,9 @@ async function sendComment() {
     <div v-else-if="request" class="detail-content">
       <div class="detail-heading">
         <div>
-          <p class="eyebrow">ЗАЯВКА #{{ request.id }} · {{ request.createdAt }}</p>
+          <p class="eyebrow">
+            ЗАЯВКА #{{ request.id }} · {{ request.createdAt }}
+          </p>
           <h1>{{ request.title }}</h1>
           <div class="detail-badges">
             <StatusBadge :status="request.status" />
@@ -316,7 +297,8 @@ async function sendComment() {
         </div>
       </div>
       <p v-if="lookups.error.value" class="api-notice" role="status">
-        Не удалось загрузить часть справочников. Для заявки показаны доступные данные.
+        Не удалось загрузить часть справочников. Для заявки показаны доступные
+        данные.
       </p>
       <div class="detail-grid">
         <div class="detail-main">
@@ -351,14 +333,20 @@ async function sendComment() {
                 maxlength="2000"
                 placeholder="Напишите сообщение..."
               ></textarea>
-              <p v-if="commentError" class="form-error" role="alert">{{ commentError }}</p>
-              <p v-if="commentSuccess" class="success-note" role="status">{{ commentSuccess }}</p>
+              <p v-if="commentError" class="form-error" role="alert">
+                {{ commentError }}
+              </p>
+              <p v-if="commentSuccess" class="success-note" role="status">
+                {{ commentSuccess }}
+              </p>
               <button
                 class="button button-primary"
                 type="submit"
                 :disabled="isSendingComment || !comment.trim()"
               >
-                {{ isSendingComment ? "Отправляем..." : "Отправить комментарий" }}
+                {{
+                  isSendingComment ? "Отправляем..." : "Отправить комментарий"
+                }}
               </button>
             </form>
           </section>
@@ -390,47 +378,22 @@ async function sendComment() {
             <div>
               <dt>Статус</dt>
               <dd>
-                <select
-                  :value="request.status"
-                  aria-label="Статус"
-                  :disabled="isSaving"
-                  @change="changeStatus"
-                >
-                  <option>Новая</option>
-                  <option>Назначена</option>
-                  <option>Ожидает ответа</option>
-                  <option>Решена</option>
-                </select>
+                <span>{{ request.status }}</span>
               </dd>
             </div>
             <div>
               <dt>Исполнитель</dt>
               <dd>
-                <select
-                  ref="assigneeSelect"
-                  v-model="selectedAssignee"
-                  aria-label="Исполнитель"
-                  :disabled="isSaving"
-                  @change="changeAssignee"
-                >
-                  <option value="">Не назначен</option>
-                  <option
-                    v-for="user in lookups.users.value"
-                    :key="user.id"
-                    :value="user.name"
-                  >
-                    {{ user.name }}
-                  </option>
-                </select>
-                <p v-if="assigneeError" class="form-error assignee-error" role="alert">
-                  {{ assigneeError }}
-                </p>
+                <span>{{ request.assignee }}</span>
               </dd>
             </div>
             <div>
               <dt>Приоритет</dt>
               <dd>
                 <select
+                  v-if="
+                    authUser?.role === 'Operator' || authUser?.role === 'Admin'
+                  "
                   :value="request.priority"
                   aria-label="Приоритет"
                   :disabled="isSaving"
@@ -441,6 +404,7 @@ async function sendComment() {
                   <option>Высокий</option>
                   <option>Критический</option>
                 </select>
+                <span v-else>{{ request.priority }}</span>
               </dd>
             </div>
             <div>
@@ -449,15 +413,37 @@ async function sendComment() {
             </div>
           </dl>
           <button
+            v-if="authUser?.role === 'Operator' || authUser?.role === 'Admin'"
             class="button button-primary full-width assign-button"
             type="button"
             :disabled="isSaving"
-            @click="saveAssignee"
+            @click="openAction('assign')"
           >
-            {{ isSaving ? "Сохраняем..." : assigneeButtonLabel }}
+            {{ request.assignee === "Не назначен" ? "Назначить исполнителя" : "Изменить исполнителя" }}
           </button>
+          <div v-if="authUser?.role !== 'Client'" class="request-actions">
+            <button
+              v-if="request.status !== 'Решена'"
+              class="button button-primary full-width"
+              type="button"
+              :disabled="isSaving"
+              @click="openAction('status')"
+            >
+              Изменить статус
+            </button>
+          </div>
         </aside>
       </div>
     </div>
+    <RequestActionModal
+      v-if="actionMode && request"
+      :mode="actionMode"
+      :current-status="request.status"
+      :users="actionUsers"
+      :busy="isSaving"
+      :server-error="actionError"
+      @close="actionMode = null"
+      @save="saveAction"
+    />
   </div>
 </template>

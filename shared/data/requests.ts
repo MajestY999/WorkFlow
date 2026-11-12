@@ -1,4 +1,4 @@
-import type { SupportRequest } from "~/types/request";
+import type { SupportRequest } from "../types/request";
 
 export const initialRequests: SupportRequest[] = [
   {
@@ -15,12 +15,12 @@ export const initialRequests: SupportRequest[] = [
       "После обновления не удаётся войти в CRM. При попытке входа появляется сообщение «Доступ запрещён». Проблема затрагивает отдел продаж.",
     comments: [
       {
-        author: "Мария Смирнова",
+        author: "Клиент АО «Вектор»",
         time: "09:14",
         text: "Не можем войти с рабочих компьютеров. Нужна помощь.",
       },
     ],
-    timeline: [{ time: "09:14", text: "Мария создала заявку" }],
+    timeline: [{ time: "09:14", text: "Клиент АО «Вектор» создал(а) заявку" }],
   },
   {
     id: 1041,

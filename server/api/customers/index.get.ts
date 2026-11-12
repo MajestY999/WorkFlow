@@ -1,7 +1,13 @@
-import { applyDemoNetworkBehavior } from "../../utils/api-request";
-import { customers } from "../../utils/mock-data";
+import { query } from "../../utils/database";
 
 export default defineEventHandler(async (event) => {
-  await applyDemoNetworkBehavior(event);
-  return customers;
+  const user = event.context.user!;
+  if (user.role === "Client" && user.customerId === null) return [];
+  const result = await query<{ id: string; name: string }>(
+    `SELECT id, name FROM customers
+     WHERE $1::bigint IS NULL OR id = $1
+     ORDER BY name`,
+    [user.role === "Client" ? user.customerId : null],
+  );
+  return result.rows.map((row) => ({ id: Number(row.id), name: row.name }));
 });

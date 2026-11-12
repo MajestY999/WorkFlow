@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RequestPriority } from "~/types/request";
+import type { RequestPriority } from "#shared/types/request";
 defineProps<{ priority: RequestPriority }>();
 const symbols: Record<RequestPriority, string> = {
   Низкий: "↓",

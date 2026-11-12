@@ -1,3 +1,4 @@
+export type UserRole = "Client" | "Operator" | "Agent" | "Admin";
 export type RequestStatus = "Новая" | "Назначена" | "Ожидает ответа" | "Решена";
 export type RequestPriority = "Низкий" | "Обычный" | "Высокий" | "Критический";
 
@@ -76,7 +77,21 @@ export interface ApiUser {
   id: number;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
+  active: boolean;
+}
+
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+  customerId: number | null;
+}
+
+export interface AuthSessionResponse {
+  user: AuthUser | null;
+  expired?: boolean;
 }
 
 export interface ApiCustomer {
@@ -98,6 +113,7 @@ export interface RequestLookups {
 export interface CreateRequestPayload {
   title: string;
   client: string;
+  categoryId: number;
   description: string;
   priority: RequestPriority;
 }
@@ -107,6 +123,9 @@ export interface UpdateRequestPayload {
   status?: RequestStatus;
   priority?: RequestPriority;
   assignee?: string | null;
+  assigneeId?: number | null;
+  comment?: string;
+  reason?: string;
 }
 
 export interface CreateCommentPayload {

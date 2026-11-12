@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RequestListResponse } from "~/types/request";
+import type { RequestListResponse } from "#shared/types/request";
 import { mapApiRequest } from "~/utils/request-mapper";
 
 const { data } = await useFetch<RequestListResponse>("/api/requests", {

@@ -6,7 +6,7 @@ import type {
   RequestPriority,
   RequestSort,
   RequestStatus,
-} from "~/types/request";
+} from "#shared/types/request";
 import { getApiErrorMessage } from "~/utils/api-error";
 import { mapApiRequest } from "~/utils/request-mapper";
 
@@ -14,7 +14,7 @@ const route = useRoute();
 const router = useRouter();
 const showCreate = ref(false);
 const createError = ref("");
-const retryAttempt = ref(0);
+const authUser = useAuthUser();
 const pageSize = 12;
 
 function queryValue(value: unknown) {
@@ -52,10 +52,18 @@ const filters = reactive<{
 const searchSource = toRef(filters, "search");
 const debouncedSearch = useDebounce(searchSource, 350);
 const lookups = await useRequestLookups();
+const ownCustomer = computed(() =>
+  lookups.customers.value.find(
+    (customer) => customer.id === authUser.value?.customerId,
+  ),
+);
 let searchUrlTimeout: ReturnType<typeof setTimeout> | undefined;
 
 function currentPageFromQuery() {
-  return Math.max(1, Number.parseInt(queryValue(route.query.page) || "1", 10) || 1);
+  return Math.max(
+    1,
+    Number.parseInt(queryValue(route.query.page) || "1", 10) || 1,
+  );
 }
 
 const requestQuery = computed(() => {
@@ -69,9 +77,6 @@ const requestQuery = computed(() => {
     sort: queryValue(route.query.sort) || "newest",
     page: searchChanged ? 1 : currentPageFromQuery(),
     pageSize,
-    demo: queryValue(route.query.demo) || undefined,
-    delay: queryValue(route.query.delay) || undefined,
-    retry: retryAttempt.value || undefined,
   };
 });
 
@@ -140,7 +145,8 @@ function updateQuery(patch: Record<string, string | number | undefined>) {
   let changed = false;
 
   for (const [key, value] of Object.entries(patch)) {
-    const nextValue = value === undefined || value === "" ? undefined : String(value);
+    const nextValue =
+      value === undefined || value === "" ? undefined : String(value);
     if (queryValue(nextQuery[key]) === (nextValue ?? "")) continue;
     if (nextValue === undefined) delete nextQuery[key];
     else nextQuery[key] = nextValue;
@@ -194,6 +200,15 @@ watch(
   },
 );
 
+watch(
+  () => data.value.page,
+  (page) => {
+    if (page !== currentPageFromQuery()) {
+      updateQuery({ page: page === 1 ? undefined : page });
+    }
+  },
+);
+
 function goToPage(page: number) {
   updateQuery({ page: page === 1 ? undefined : page });
 }
@@ -223,6 +238,7 @@ async function createRequest(payload: CreateRequestPayload) {
         <p class="muted">Все обращения в одном месте</p>
       </div>
       <button
+        v-if="authUser?.role !== 'Agent'"
         class="button button-primary"
         type="button"
         @click="showCreate = true"
@@ -265,7 +281,7 @@ async function createRequest(payload: CreateRequestPayload) {
           <button
             class="button button-primary"
             type="button"
-            @click="retryAttempt++"
+            @click="() => refresh()"
           >
             Повторить загрузку
           </button>
@@ -328,6 +344,9 @@ async function createRequest(payload: CreateRequestPayload) {
     <CreateRequestModal
       v-if="showCreate"
       :error-message="createError"
+      :is-client="authUser?.role === 'Client'"
+      :client-name="ownCustomer?.name ?? ''"
+      :categories="lookups.categories.value"
       @close="showCreate = false"
       @create="createRequest"
     />

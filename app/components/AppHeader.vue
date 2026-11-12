@@ -1,24 +1,29 @@
 <script setup lang="ts">
+import { getApiErrorMessage } from "~/utils/api-error";
+
 const route = useRoute();
+const authUser = useAuthUser();
 const menuOpen = ref(false);
 const notificationsOpen = ref(false);
+const logoutError = ref("");
+const roleLabels = {
+  Client: "Клиент",
+  Operator: "Оператор",
+  Agent: "Исполнитель",
+  Admin: "Администратор",
+} as const;
+const userInitials = computed(() =>
+  (authUser.value?.name ?? "Пользователь")
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toLocaleUpperCase("ru"),
+);
 const links = [
   { label: "Обзор", to: "/dashboard" },
   { label: "Заявки", to: "/requests" },
 ];
-const notifications = [
-  {
-    title: "Новая заявка #1042",
-    detail: "Не работает доступ к CRM",
-    time: "5 минут назад",
-  },
-  {
-    title: "Назначен исполнитель",
-    detail: "Заявка #1040 — Брунгильда Б.",
-    time: "Вчера",
-  },
-];
-
 watch(
   () => route.fullPath,
   () => {
@@ -31,6 +36,15 @@ function closeOverlaysOnEscape(event: KeyboardEvent) {
   if (event.key === "Escape") {
     menuOpen.value = false;
     notificationsOpen.value = false;
+  }
+}
+
+async function logout() {
+  logoutError.value = "";
+  try {
+    await logoutUser();
+  } catch (failure: unknown) {
+    logoutError.value = getApiErrorMessage(failure);
   }
 }
 </script>
@@ -79,9 +93,6 @@ function closeOverlaysOnEscape(event: KeyboardEvent) {
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
           </svg>
-          <span class="notification-count" aria-label="2 новых уведомления"
-            >2</span
-          >
         </button>
         <section
           v-if="notificationsOpen"
@@ -90,35 +101,29 @@ function closeOverlaysOnEscape(event: KeyboardEvent) {
           aria-label="Последние уведомления"
         >
           <div class="notification-heading">
-            <strong>Уведомления</strong><span>2 новых</span>
+            <strong>Уведомления</strong>
           </div>
-          <NuxtLink
-            v-for="(notification, index) in notifications"
-            :key="notification.title"
-            class="notification-item"
-            :to="`/requests/${index === 0 ? 1042 : 1040}`"
-          >
-            <span class="notification-dot"></span>
-            <span
-              ><strong>{{ notification.title }}</strong
-              ><small>{{ notification.detail }}</small
-              ><time>{{ notification.time }}</time></span
-            >
-          </NuxtLink>
-          <NuxtLink class="notification-all" to="/requests"
-            >Перейти к заявкам <span aria-hidden="true">→</span></NuxtLink
-          >
+          <p class="notification-empty">Пока нет уведомлений</p>
         </section>
       </div>
       <NuxtLink
         class="profile-link"
         to="/profile"
-        aria-label="Профиль оператора Анны Кузнецовой"
+        :aria-label="`Профиль: ${authUser?.name ?? 'пользователь'}`"
         :aria-current="route.path === '/profile' ? 'page' : undefined"
         @click="menuOpen = false"
       >
-        <span class="avatar">АК</span><span class="profile-name">Оператор</span>
+        <span class="avatar">{{ userInitials }}</span>
+        <span class="profile-name">{{
+          roleLabels[authUser?.role ?? "Operator"]
+        }}</span>
       </NuxtLink>
+      <button class="profile-link logout-button" type="button" @click="logout">
+        Выйти
+      </button>
+      <p v-if="logoutError" class="form-error header-error" role="alert">
+        {{ logoutError }}
+      </p>
     </nav>
   </header>
 </template>

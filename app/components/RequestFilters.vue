@@ -4,7 +4,7 @@ import type {
   RequestPriority,
   RequestSort,
   RequestStatus,
-} from "~/types/request";
+} from "#shared/types/request";
 
 const search = defineModel<string>("search", { required: true });
 const status = defineModel<RequestStatus | "">("status", { required: true });

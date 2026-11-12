@@ -1,4 +1,4 @@
-import type { ApiCategory, ApiCustomer, ApiUser } from "~/types/request";
+import type { ApiCategory, ApiCustomer, ApiUser } from "#shared/types/request";
 
 export async function useRequestLookups() {
   const [usersResult, customersResult, categoriesResult] = await Promise.all([

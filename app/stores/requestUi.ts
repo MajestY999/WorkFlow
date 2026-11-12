@@ -3,7 +3,7 @@ import type {
   ApiRequestRecord,
   RequestPriority,
   RequestStatus,
-} from "~/types/request";
+} from "#shared/types/request";
 import { getApiErrorMessage, getApiErrorStatus } from "~/utils/api-error";
 
 type UndoableField = "status" | "priority";
