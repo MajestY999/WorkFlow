@@ -9,6 +9,7 @@ import type {
 } from "#shared/types/request";
 import { getApiErrorMessage, getApiErrorStatus } from "~/utils/api-error";
 import { mapApiRequest } from "~/utils/request-mapper";
+import { createSingleFlight } from "~/utils/request-async";
 
 const route = useRoute();
 const requestUi = useRequestUiStore();
@@ -21,9 +22,27 @@ const actionError = ref("");
 const comment = ref("");
 const commentError = ref("");
 const commentSuccess = ref("");
+const postComment = createSingleFlight((requestId: number, text: string) =>
+  $fetch<ApiRequestRecord>(`/api/requests/${requestId}/comments`, {
+    method: "POST",
+    body: { text },
+  }),
+);
 
 const { data, pending, error, refresh } = await useFetch<ApiRequestRecord>(
   () => `/api/requests/${route.params.id}`,
+);
+watch(
+  error,
+  async (failure) => {
+    if (!failure || getApiErrorStatus(failure) !== 401) return;
+    authUser.value = null;
+    await navigateTo({
+      path: "/login",
+      query: { redirect: route.fullPath, reason: "session-expired" },
+    });
+  },
+  { immediate: true },
 );
 const lookups = await useRequestLookups();
 const request = computed<SupportRequest | null>(() =>
@@ -128,6 +147,15 @@ async function updateRequest(
     });
   } catch (failure: unknown) {
     data.value = previous;
+    if (getApiErrorStatus(failure) === 401) {
+      isSaving.value = false;
+      useAuthUser().value = null;
+      await navigateTo({
+        path: "/login",
+        query: { redirect: route.fullPath, reason: "session-expired" },
+      });
+      return false;
+    }
     actionError.value = getApiErrorMessage(failure);
     requestUi.showNotice(updateFailureMessage(failure), "error");
     isSaving.value = false;
@@ -221,18 +249,20 @@ async function sendComment() {
   commentError.value = "";
   commentSuccess.value = "";
   try {
-    const updated = await $fetch<ApiRequestRecord>(
-      `/api/requests/${request.value.id}/comments`,
-      {
-        method: "POST",
-        body: { text },
-      },
-    );
+    const updated = await postComment(request.value.id, text);
     data.value = updated;
     comment.value = "";
     commentSuccess.value = "Комментарий отправлен.";
     requestUi.dismissNotice();
   } catch (failure: unknown) {
+    if (getApiErrorStatus(failure) === 401) {
+      useAuthUser().value = null;
+      await navigateTo({
+        path: "/login",
+        query: { redirect: route.fullPath, reason: "session-expired" },
+      });
+      return;
+    }
     commentError.value = `Не удалось отправить комментарий. Текст сохранён — попробуйте ещё раз. ${getApiErrorMessage(failure)}`;
   } finally {
     isSendingComment.value = false;

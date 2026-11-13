@@ -7,6 +7,7 @@ import type {
 
 const props = defineProps<{
   errorMessage?: string;
+  isSubmitting?: boolean;
   isClient?: boolean;
   clientName?: string;
   categories: ApiCategory[];
@@ -21,6 +22,9 @@ const description = ref("");
 const priority = ref<RequestPriority>("Обычный");
 const categoryId = ref(props.categories[0]?.id ?? 0);
 const dialog = ref<HTMLElement | null>(null);
+const titleError = ref("");
+const clientError = ref("");
+const descriptionError = ref("");
 
 watch(
   () => props.categories,
@@ -67,6 +71,23 @@ onMounted(() => {
 onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
 
 function submit() {
+  if (props.isSubmitting) return;
+  titleError.value = title.value.trim() ? "" : "Укажите название заявки.";
+  clientError.value =
+    !props.isClient && !client.value.trim() ? "Укажите клиента." : "";
+  descriptionError.value = description.value.trim()
+    ? ""
+    : "Опишите проблему.";
+  if (titleError.value || clientError.value || descriptionError.value) {
+    const invalidField = titleError.value
+      ? "[name='title']"
+      : clientError.value
+        ? "[name='client']"
+        : "[name='description']";
+    dialog.value?.querySelector<HTMLElement>(invalidField)?.focus();
+    return;
+  }
+
   emit("create", {
     title: title.value.trim(),
     client: client.value.trim(),
@@ -78,7 +99,7 @@ function submit() {
 </script>
 
 <template>
-  <div class="modal-backdrop" @mousedown.self="emit('close')">
+  <div class="modal-backdrop" @mousedown.self="!isSubmitting && emit('close')">
     <section
       ref="dialog"
       class="modal-card"
@@ -95,29 +116,46 @@ function submit() {
           class="icon-button"
           type="button"
           aria-label="Закрыть"
+          :disabled="isSubmitting"
           @click="emit('close')"
         >
           ×
         </button>
       </div>
-      <form class="stack-form" @submit.prevent="submit">
+      <form class="stack-form" novalidate @submit.prevent="submit">
         <p v-if="errorMessage" class="form-error" role="alert">
           {{ errorMessage }}
         </p>
-        <label
-          >Название заявки<input
+        <label>
+          Название заявки
+          <input
             v-model="title"
+            name="title"
             required
             maxlength="100"
+            :aria-invalid="Boolean(titleError)"
             placeholder="Кратко опишите проблему"
-        /></label>
-        <label v-if="!isClient"
-          >Клиент<input
+            @input="titleError = ''"
+          >
+          <span v-if="titleError" class="form-error" role="alert">
+            {{ titleError }}
+          </span>
+        </label>
+        <label v-if="!isClient">
+          Клиент
+          <input
             v-model="client"
+            name="client"
             required
             maxlength="80"
+            :aria-invalid="Boolean(clientError)"
             placeholder="Название компании"
-        /></label>
+            @input="clientError = ''"
+          >
+          <span v-if="clientError" class="form-error" role="alert">
+            {{ clientError }}
+          </span>
+        </label>
         <p v-else class="muted">Клиент: {{ clientName }}</p>
         <label
           >Категория<select v-model.number="categoryId" required>
@@ -138,23 +176,37 @@ function submit() {
             <option>Критический</option>
           </select></label
         >
-        <label
-          >Описание<textarea
+        <label>
+          Описание
+          <textarea
             v-model="description"
+            name="description"
             rows="4"
             required
+            :aria-invalid="Boolean(descriptionError)"
             placeholder="Подробности обращения"
-          ></textarea>
+            @input="descriptionError = ''"
+          />
+          <span v-if="descriptionError" class="form-error" role="alert">
+            {{ descriptionError }}
+          </span>
         </label>
         <div class="modal-actions">
           <button
             class="button button-outline"
             type="button"
+            :disabled="isSubmitting"
             @click="emit('close')"
           >
             Отмена</button
-          ><button class="button button-primary" type="submit">
-            Создать заявку
+          ><button class="button button-primary" type="submit" :disabled="isSubmitting">
+            {{
+              isSubmitting
+                ? "Создаём..."
+                : errorMessage
+                  ? "Повторить"
+                  : "Создать заявку"
+            }}
           </button>
         </div>
       </form>

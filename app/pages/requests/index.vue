@@ -7,13 +7,15 @@ import type {
   RequestSort,
   RequestStatus,
 } from "#shared/types/request";
-import { getApiErrorMessage } from "~/utils/api-error";
+import { getApiErrorMessage, getApiErrorStatus } from "~/utils/api-error";
 import { mapApiRequest } from "~/utils/request-mapper";
 
 const route = useRoute();
 const router = useRouter();
 const showCreate = ref(false);
 const createError = ref("");
+const createRefreshError = ref("");
+const isCreating = ref(false);
 const authUser = useAuthUser();
 const pageSize = 12;
 
@@ -49,16 +51,16 @@ const filters = reactive<{
   assignee: queryValue(route.query.assignee),
   sort: isRequestSort(initialSort) ? initialSort : "newest",
 });
-const searchSource = toRef(filters, "search");
-const debouncedSearch = useDebounce(searchSource, 350);
+const debouncedSearch = useDebounce(toRef(filters, "search"), 350);
+const searchIsDirty = computed(
+  () => filters.search.trim() !== queryValue(route.query.q),
+);
 const lookups = await useRequestLookups();
 const ownCustomer = computed(() =>
   lookups.customers.value.find(
     (customer) => customer.id === authUser.value?.customerId,
   ),
 );
-let searchUrlTimeout: ReturnType<typeof setTimeout> | undefined;
-
 function currentPageFromQuery() {
   return Math.max(
     1,
@@ -84,6 +86,7 @@ const { data, pending, error, refresh } = await useFetch<RequestListResponse>(
   "/api/requests",
   {
     query: requestQuery,
+    dedupe: "cancel",
     default: () => ({
       items: [],
       total: 0,
@@ -98,6 +101,19 @@ const { data, pending, error, refresh } = await useFetch<RequestListResponse>(
       },
     }),
   },
+);
+
+watch(
+  error,
+  async (failure) => {
+    if (!failure || getApiErrorStatus(failure) !== 401) return;
+    authUser.value = null;
+    await navigateTo({
+      path: "/login",
+      query: { redirect: route.fullPath, reason: "session-expired" },
+    });
+  },
+  { immediate: true },
 );
 
 const requests = computed(() =>
@@ -148,7 +164,7 @@ function updateQuery(patch: Record<string, string | number | undefined>) {
     const nextValue =
       value === undefined || value === "" ? undefined : String(value);
     if (queryValue(nextQuery[key]) === (nextValue ?? "")) continue;
-    if (nextValue === undefined) delete nextQuery[key];
+    if (nextValue === undefined) Reflect.deleteProperty(nextQuery, key);
     else nextQuery[key] = nextValue;
     changed = true;
   }
@@ -156,13 +172,9 @@ function updateQuery(patch: Record<string, string | number | undefined>) {
   if (changed) void router.replace({ query: nextQuery });
 }
 
-watch(searchSource, (search) => {
-  clearTimeout(searchUrlTimeout);
-  searchUrlTimeout = setTimeout(() => {
-    updateQuery({ q: search.trim() || undefined, page: undefined });
-  }, 350);
+watch(debouncedSearch, (search) => {
+  updateQuery({ q: search.trim() || undefined, page: undefined });
 });
-onScopeDispose(() => clearTimeout(searchUrlTimeout));
 
 watch(
   () => [filters.status, filters.priority, filters.assignee, filters.sort],
@@ -184,7 +196,9 @@ watch(
     const status = queryValue(query.status);
     const priority = queryValue(query.priority);
     const sort = queryValue(query.sort);
-    if (filters.search !== search) filters.search = search;
+    if (filters.search.trim() !== search && !searchIsDirty.value) {
+      filters.search = search;
+    }
     if (filters.status !== (isRequestStatus(status) ? status : "")) {
       filters.status = isRequestStatus(status) ? status : "";
     }
@@ -214,18 +228,45 @@ function goToPage(page: number) {
 }
 
 async function createRequest(payload: CreateRequestPayload) {
+  if (isCreating.value) return;
   createError.value = "";
+  createRefreshError.value = "";
+  isCreating.value = true;
   try {
     await $fetch<ApiRequestRecord>("/api/requests", {
       method: "POST",
       body: payload,
     });
-    await router.replace({ query: {} });
-    await refresh();
     showCreate.value = false;
-  } catch (requestError: unknown) {
-    createError.value = getApiErrorMessage(requestError);
+  } catch (failure: unknown) {
+    if (getApiErrorStatus(failure) === 401) {
+      useAuthUser().value = null;
+      await navigateTo({
+        path: "/login",
+        query: { redirect: route.fullPath, reason: "session-expired" },
+      });
+      return;
+    }
+    createError.value =
+      getApiErrorStatus(failure) === 500
+        ? "Не удалось сохранить изменения. Данные не потеряны. Повторите попытку."
+        : getApiErrorMessage(failure);
+    return;
+  } finally {
+    isCreating.value = false;
   }
+
+  await router.replace({ query: {} });
+  try {
+    await refresh();
+  } catch (failure: unknown) {
+    createRefreshError.value = `Заявка создана, но список не обновился. ${getApiErrorMessage(failure)}`;
+  }
+}
+
+function openCreateModal() {
+  createError.value = "";
+  showCreate.value = true;
 }
 </script>
 
@@ -241,7 +282,7 @@ async function createRequest(payload: CreateRequestPayload) {
         v-if="authUser?.role !== 'Agent'"
         class="button button-primary"
         type="button"
-        @click="showCreate = true"
+        @click="openCreateModal"
       >
         Создать заявку
       </button>
@@ -249,6 +290,12 @@ async function createRequest(payload: CreateRequestPayload) {
     <RequestStats :requests="requests" :counts="data.statusCounts" />
     <p v-if="lookupErrorMessage" class="api-notice" role="status">
       Справочники временно недоступны. {{ lookupErrorMessage }}
+    </p>
+    <p v-if="createRefreshError" class="api-notice" role="alert">
+      {{ createRefreshError }}
+      <button class="text-link" type="button" @click="() => refresh()">
+        Повторить загрузку списка
+      </button>
     </p>
     <section class="section-block">
       <div class="section-heading">
@@ -344,6 +391,7 @@ async function createRequest(payload: CreateRequestPayload) {
     <CreateRequestModal
       v-if="showCreate"
       :error-message="createError"
+      :is-submitting="isCreating"
       :is-client="authUser?.role === 'Client'"
       :client-name="ownCustomer?.name ?? ''"
       :categories="lookups.categories.value"

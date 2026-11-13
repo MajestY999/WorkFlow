@@ -1,6 +1,7 @@
 import { createError, getRouterParam, readBody } from "h3";
 import { z } from "zod";
 import type { RequestPriority, RequestStatus } from "#shared/types/request";
+import { canTransitionRequestStatus } from "#shared/utils/request-rules";
 import { withTransaction } from "../../utils/database";
 import { getRequestForUser } from "../../utils/request-repository";
 
@@ -24,13 +25,6 @@ const updateSchema = z
       body.priority !== undefined ||
       body.assigneeId !== undefined,
   );
-
-const validTransitions: Record<RequestStatus, readonly RequestStatus[]> = {
-  Новая: ["Назначена", "Решена"],
-  Назначена: ["Новая", "Ожидает ответа", "Решена"],
-  "Ожидает ответа": ["Новая", "Назначена", "Решена"],
-  Решена: [],
-};
 
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, "id"));
@@ -128,8 +122,7 @@ export default defineEventHandler(async (event) => {
       status = assigneeId === null ? "Новая" : "Назначена";
     }
     if (
-      status !== current.status &&
-      !validTransitions[current.status].includes(status)
+      !canTransitionRequestStatus(current.status, status)
     ) {
       throw createError({
         statusCode: 409,
