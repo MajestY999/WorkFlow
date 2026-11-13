@@ -121,9 +121,7 @@ export default defineEventHandler(async (event) => {
     ) {
       status = assigneeId === null ? "Новая" : "Назначена";
     }
-    if (
-      !canTransitionRequestStatus(current.status, status)
-    ) {
+    if (!canTransitionRequestStatus(current.status, status)) {
       throw createError({
         statusCode: 409,
         statusMessage: `Недопустимый переход статуса: «${current.status}» → «${status}».`,

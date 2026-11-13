@@ -99,20 +99,48 @@ async function saveProfile() {
       <div class="profile-fields">
         <label>
           Имя
-          <input v-model="name" required minlength="2" maxlength="120" autocomplete="name" />
+          <input
+            v-model="name"
+            required
+            minlength="2"
+            maxlength="120"
+            autocomplete="name"
+          />
         </label>
         <label>
           Электронная почта
-          <input v-model="email" type="email" required maxlength="254" autocomplete="email" />
+          <input
+            v-model="email"
+            type="email"
+            required
+            maxlength="254"
+            autocomplete="email"
+          />
         </label>
       </div>
       <div class="profile-actions">
-        <p v-if="profileError" class="form-error" role="alert">{{ profileError }}</p>
-        <p v-else class="profile-helper">Это имя отображается в комментариях к заявкам.</p>
+        <p v-if="profileError" class="form-error" role="alert">
+          {{ profileError }}
+        </p>
+        <p v-else class="profile-helper">
+          Это имя отображается в комментариях к заявкам.
+        </p>
         <div class="profile-submit">
-          <span v-if="saved" class="success-note" role="status">Изменения сохранены</span>
-          <button class="button button-primary" type="submit" :disabled="isSaving">
-            {{ isSaving ? "Сохраняем..." : saved ? "Сохранено" : "Сохранить изменения" }}
+          <span v-if="saved" class="success-note" role="status"
+            >Изменения сохранены</span
+          >
+          <button
+            class="button button-primary"
+            type="submit"
+            :disabled="isSaving"
+          >
+            {{
+              isSaving
+                ? "Сохраняем..."
+                : saved
+                  ? "Сохранено"
+                  : "Сохранить изменения"
+            }}
           </button>
         </div>
       </div>

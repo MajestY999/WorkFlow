@@ -44,7 +44,11 @@ async function signIn() {
       <section class="login-card">
         <h1>С возвращением</h1>
         <p class="muted">Войдите для работы с заявками</p>
-        <p v-if="route.query.reason === 'session-expired'" class="api-notice" role="status">
+        <p
+          v-if="route.query.reason === 'session-expired'"
+          class="api-notice"
+          role="status"
+        >
           Сессия истекла. Войдите снова, чтобы продолжить работу.
         </p>
         <form class="stack-form" @submit.prevent="signIn">
@@ -73,7 +77,9 @@ async function signIn() {
             {{ isSubmitting ? "Входим..." : "Войти" }}
           </button>
         </form>
-        <NuxtLink class="text-link" to="/register">Нет аккаунта? Зарегистрироваться</NuxtLink>
+        <NuxtLink class="text-link" to="/register"
+          >Нет аккаунта? Зарегистрироваться</NuxtLink
+        >
       </section>
     </main>
   </div>

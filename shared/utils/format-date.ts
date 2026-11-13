@@ -9,5 +9,6 @@ export function formatRequestDateTime(value: string) {
     month: "long",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
   }).format(date);
 }

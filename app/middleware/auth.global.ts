@@ -1,7 +1,16 @@
 import type { AuthSessionResponse } from "#shared/types/request";
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === "/") return;
+  if (
+    to.path === "/" ||
+    to.path === "/faq" ||
+    to.path === "/help" ||
+    to.path.startsWith("/help/") ||
+    to.path === "/articles" ||
+    to.path.startsWith("/articles/")
+  ) {
+    return;
+  }
 
   const authUser = useAuthUser();
   const wasAuthenticated = Boolean(authUser.value);

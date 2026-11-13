@@ -99,10 +99,10 @@ async function updateRequest(
         previousValue: RequestPriority;
         value: RequestPriority;
       },
-      metadata: Pick<UpdateRequestPayload, "comment" | "reason"> = {},
+  metadata: Pick<UpdateRequestPayload, "comment" | "reason"> = {},
 ): Promise<boolean> {
-      const previous = data.value;
-      if (!previous || isSaving.value) return false;
+  const previous = data.value;
+  if (!previous || isSaving.value) return false;
 
   const expectedVersion = previous.version ?? 1;
   const nextStatus =
@@ -201,9 +201,7 @@ function changePriority(event: Event) {
   );
 }
 
-async function openAction(
-  mode: "assign" | "status",
-) {
+async function openAction(mode: "assign" | "status") {
   actionError.value = "";
   actionUsers.value = lookups.users.value;
   if (
@@ -449,7 +447,11 @@ async function sendComment() {
             :disabled="isSaving"
             @click="openAction('assign')"
           >
-            {{ request.assignee === "Не назначен" ? "Назначить исполнителя" : "Изменить исполнителя" }}
+            {{
+              request.assignee === "Не назначен"
+                ? "Назначить исполнителя"
+                : "Изменить исполнителя"
+            }}
           </button>
           <div v-if="authUser?.role !== 'Client'" class="request-actions">
             <button

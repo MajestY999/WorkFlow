@@ -46,26 +46,61 @@ async function register() {
         <form class="stack-form" @submit.prevent="register">
           <label>
             Имя
-            <input v-model="name" required minlength="2" maxlength="120" autocomplete="name" placeholder="Мария Смирнова" />
+            <input
+              v-model="name"
+              required
+              minlength="2"
+              maxlength="120"
+              autocomplete="name"
+              placeholder="Мария Смирнова"
+            />
           </label>
           <label>
             Компания
-            <input v-model="company" required minlength="2" maxlength="200" autocomplete="organization" placeholder="АО «Вектор»" />
+            <input
+              v-model="company"
+              required
+              minlength="2"
+              maxlength="200"
+              autocomplete="organization"
+              placeholder="АО «Вектор»"
+            />
           </label>
           <label>
             Электронная почта
-            <input v-model="email" type="email" required maxlength="254" autocomplete="email" placeholder="0000@mail.demo" />
+            <input
+              v-model="email"
+              type="email"
+              required
+              maxlength="254"
+              autocomplete="email"
+              placeholder="0000@mail.demo"
+            />
           </label>
           <label>
             Пароль
-            <input v-model="password" type="password" required minlength="8" maxlength="200" autocomplete="new-password" placeholder="Не менее 8 символов" />
+            <input
+              v-model="password"
+              type="password"
+              required
+              minlength="8"
+              maxlength="200"
+              autocomplete="new-password"
+              placeholder="Не менее 8 символов"
+            />
           </label>
           <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-          <button class="button button-primary" type="submit" :disabled="isSubmitting">
+          <button
+            class="button button-primary"
+            type="submit"
+            :disabled="isSubmitting"
+          >
             {{ isSubmitting ? "Создаём аккаунт..." : "Зарегистрироваться" }}
           </button>
         </form>
-        <NuxtLink class="text-link" to="/login">Уже есть аккаунт? Войти</NuxtLink>
+        <NuxtLink class="text-link" to="/login"
+          >Уже есть аккаунт? Войти</NuxtLink
+        >
       </section>
     </main>
   </div>

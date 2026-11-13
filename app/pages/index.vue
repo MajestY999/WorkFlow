@@ -1,5 +1,9 @@
 <script setup lang="ts">
 definePageMeta({ layout: "public" });
+usePublicSeo(
+  "WorkFlow — поддержка команды и управление заявками",
+  "Создавайте заявки, назначайте исполнителей и следите за сроками в WorkFlow.",
+);
 const menuOpen = ref(false);
 </script>
 
@@ -23,16 +27,16 @@ const menuOpen = ref(false);
         <span class="sr-only">{{
           menuOpen ? "Закрыть меню" : "Открыть меню"
         }}</span>
-        <span></span><span></span><span></span>
+        <span /><span /><span />
       </button>
       <nav
         id="landing-nav"
         :class="{ 'is-open': menuOpen }"
         aria-label="Навигация по сайту"
       >
-        <a href="#features" @click="menuOpen = false">Статьи</a>
-        <a href="#features" @click="menuOpen = false">Помощь</a>
-        <a href="#features" @click="menuOpen = false">FAQ</a>
+        <NuxtLink to="/articles" @click="menuOpen = false">Статьи</NuxtLink>
+        <NuxtLink to="/help" @click="menuOpen = false">Помощь</NuxtLink>
+        <NuxtLink to="/faq" @click="menuOpen = false">FAQ</NuxtLink>
       </nav>
     </header>
     <main>
@@ -49,7 +53,7 @@ const menuOpen = ref(false);
           >
         </div>
         <div class="workflow-mark" aria-hidden="true">
-          <span></span><span></span>
+          <span /><span />
         </div>
       </section>
       <section class="steps-grid" aria-label="Как это работает">
@@ -78,8 +82,8 @@ const menuOpen = ref(false);
     <footer class="app-footer landing-footer">
       <span>WorkFlow © 2026</span>
       <div>
-        <a href="#features">Помощь</a>
-        <a href="#features">FAQ</a>
+        <NuxtLink to="/help">Помощь</NuxtLink>
+        <NuxtLink to="/faq">FAQ</NuxtLink>
       </div>
     </footer>
   </div>

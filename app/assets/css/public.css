@@ -1,0 +1,365 @@
+.knowledge-frame {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, #1b1940 0, var(--page) 56%);
+}
+.public-header {
+  position: relative;
+  z-index: 5;
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 clamp(20px, 4vw, 64px);
+  background: rgba(37, 34, 79, 0.9);
+}
+.public-navigation {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-left: auto;
+}
+.public-navigation a {
+  color: #c4c1dc;
+  font-size: 13px;
+  transition: color 0.18s ease;
+}
+.public-navigation a:hover,
+.public-navigation a[aria-current="page"] {
+  color: #fff;
+}
+.public-login {
+  flex: none;
+}
+.public-menu-toggle {
+  display: none;
+}
+.knowledge-content {
+  width: min(100% - 2 * clamp(20px, 4vw, 64px), 1280px);
+  margin: 0 auto;
+  padding: 44px 0 64px;
+}
+.knowledge-heading {
+  margin: 0 0 22px;
+}
+.knowledge-heading h1,
+.article-heading h1 {
+  margin: 0 0 9px;
+  font-size: clamp(24px, 3vw, 32px);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+.knowledge-heading p,
+.article-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.knowledge-search {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 20px;
+  color: #cbc8e1;
+  font-size: 12px;
+  font-weight: 600;
+}
+.knowledge-search input {
+  min-height: 40px;
+}
+.knowledge-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: rgba(37, 34, 79, 0.82);
+}
+.faq-list,
+.instruction-list {
+  display: grid;
+  gap: 12px;
+}
+.faq-card {
+  padding: 17px 18px;
+}
+.faq-card h2,
+.category-card h2,
+.article-body h2 {
+  margin: 0 0 9px;
+  font-size: 15px;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+}
+.faq-card p,
+.category-card p,
+.article-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.knowledge-empty {
+  margin: 0;
+  padding: 17px 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.category-card {
+  min-height: 116px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  padding: 16px;
+}
+.category-card h2 {
+  margin-bottom: 7px;
+}
+.category-card p {
+  margin-bottom: 12px;
+}
+.category-card .text-link {
+  margin-top: auto;
+  color: var(--cyan);
+  font-size: 12px;
+}
+.popular-instructions,
+.all-articles {
+  margin-top: 20px;
+}
+.popular-instructions > h2,
+.all-articles > h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.instruction-card {
+  min-height: 66px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  padding: 13px 15px;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+.instruction-card:hover {
+  border-color: #635db0;
+  background: var(--surface-raised);
+}
+.instruction-card strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.instruction-card span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.help-cta {
+  margin-top: 14px;
+}
+.article-content {
+  padding-top: 42px;
+}
+.article-heading {
+  margin-bottom: 22px;
+}
+.article-heading h1 {
+  max-width: 760px;
+}
+.article-body {
+  padding: 20px;
+}
+.article-body > h2 {
+  margin-bottom: 10px;
+}
+.article-step {
+  margin-top: 18px;
+}
+.article-step h2 {
+  margin-bottom: 8px;
+}
+.article-feedback {
+  margin-top: 18px;
+}
+.article-feedback h2 {
+  margin-bottom: 9px;
+  font-size: 13px;
+}
+.article-feedback .button + .button {
+  margin-left: 7px;
+}
+.help-category-content {
+  padding-top: 32px;
+}
+.help-category-content > .back-link {
+  margin-bottom: 17px;
+}
+.public-not-found {
+  min-height: min(560px, calc(100vh - 62px));
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+.public-not-found > strong {
+  color: var(--cyan);
+  font-size: 38px;
+}
+.public-not-found h1 {
+  margin: 8px 0;
+  font-size: 24px;
+}
+.public-not-found p {
+  margin: 0 0 17px;
+  color: var(--muted);
+  font-size: 13px;
+}
+@media (max-width: 900px) {
+  .knowledge-content {
+    width: calc(100% - 52px);
+  }
+  .category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .public-header {
+    min-height: 68px;
+    padding: 0 20px;
+  }
+  .public-menu-toggle {
+    display: flex;
+    order: 2;
+    flex: none;
+  }
+  .public-login {
+    margin-left: auto;
+    order: 1;
+  }
+  .public-navigation {
+    position: absolute;
+    z-index: 10;
+    top: 60px;
+    right: 12px;
+    left: 12px;
+    display: none;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: #201e46;
+    box-shadow: 0 16px 34px #0e0d25;
+  }
+  .public-navigation.is-open {
+    display: flex;
+  }
+  .public-navigation a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 3px;
+  }
+  .public-navigation a:hover {
+    background: var(--surface-raised);
+  }
+  .knowledge-content {
+    width: calc(100% - 28px);
+    padding: 35px 0 52px;
+  }
+  .knowledge-heading {
+    margin-bottom: 18px;
+  }
+  .knowledge-heading h1,
+  .article-heading h1 {
+    font-size: 24px;
+  }
+  .knowledge-search {
+    margin-bottom: 18px;
+  }
+  .faq-list,
+  .instruction-list {
+    gap: 13px;
+  }
+  .faq-card {
+    padding: 16px;
+  }
+  .faq-card h2,
+  .article-body h2 {
+    font-size: 15px;
+  }
+  .faq-card p,
+  .article-body p {
+    font-size: 12px;
+  }
+  .category-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .category-card {
+    min-height: 137px;
+    padding: 19px;
+  }
+  .category-card h2 {
+    font-size: 17px;
+  }
+  .category-card p {
+    margin-bottom: 15px;
+    font-size: 13px;
+  }
+  .category-card .text-link {
+    font-size: 13px;
+  }
+  .popular-instructions,
+  .all-articles {
+    margin-top: 20px;
+  }
+  .popular-instructions > h2,
+  .all-articles > h2 {
+    font-size: 18px;
+  }
+  .instruction-card {
+    min-height: 86px;
+    gap: 8px;
+    padding: 16px;
+  }
+  .instruction-card strong {
+    font-size: 14px;
+  }
+  .instruction-card span {
+    font-size: 11px;
+  }
+  .help-cta {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 18px;
+  }
+  .article-content {
+    padding-top: 35px;
+  }
+  .article-heading {
+    margin-bottom: 18px;
+  }
+  .article-body {
+    padding: 17px;
+  }
+  .article-step {
+    margin-top: 16px;
+  }
+  .article-step h2 {
+    font-size: 15px;
+  }
+  .help-category-content {
+    padding-top: 28px;
+  }
+  .public-not-found {
+    min-height: calc(100vh - 68px);
+  }
+}
