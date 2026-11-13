@@ -10,6 +10,7 @@ import type {
 import { getApiErrorMessage, getApiErrorStatus } from "~/utils/api-error";
 import { mapApiRequest } from "~/utils/request-mapper";
 import { createSingleFlight } from "~/utils/request-async";
+import { canTransitionRequestStatus } from "#shared/utils/request-rules";
 
 const route = useRoute();
 const requestUi = useRequestUiStore();
@@ -93,6 +94,7 @@ async function updateRequest(
         field: "status";
         previousValue: RequestStatus;
         value: RequestStatus;
+        reason?: string;
       }
     | {
         field: "priority";
@@ -170,6 +172,9 @@ async function updateRequest(
       previousValue: undo.previousValue,
       value: undo.value,
       expectedVersion: updated.version ?? expectedVersion + 1,
+      ...(undo.field === "status" && undo.reason
+        ? { reason: undo.reason }
+        : {}),
     });
   } else {
     requestUi.showNotice("Изменения заявки сохранены.");
@@ -228,7 +233,22 @@ async function saveAction(
 ) {
   actionError.value = "";
   const { comment: actionComment, reason, ...changes } = payload;
-  const saved = await updateRequest(changes, undefined, {
+  const previousStatus = request.value?.status;
+  const undo =
+    payload.status &&
+    previousStatus &&
+    payload.status !== previousStatus &&
+    canTransitionRequestStatus(payload.status, previousStatus)
+      ? {
+          field: "status" as const,
+          previousValue: previousStatus,
+          value: payload.status,
+          ...(previousStatus === "Ожидает ответа"
+            ? { reason: "Восстановлено предыдущее состояние заявки." }
+            : {}),
+        }
+      : undefined;
+  const saved = await updateRequest(changes, undo, {
     comment: actionComment,
     reason,
   });

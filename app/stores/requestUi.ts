@@ -15,6 +15,7 @@ interface UndoableChange {
   previousValue: UndoableValue;
   value: UndoableValue;
   expectedVersion: number;
+  reason?: string;
 }
 
 export const useRequestUiStore = defineStore("request-ui", () => {
@@ -51,6 +52,7 @@ export const useRequestUiStore = defineStore("request-ui", () => {
         body: {
           expectedVersion: change.expectedVersion,
           [change.field]: change.previousValue,
+          ...(change.reason ? { reason: change.reason } : {}),
         },
       });
       undoableChange.value = null;

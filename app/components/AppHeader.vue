@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { getApiErrorMessage } from "~/utils/api-error";
-
 const route = useRoute();
 const authUser = useAuthUser();
 const menuOpen = ref(false);
 const notificationsOpen = ref(false);
-const logoutError = ref("");
 const roleLabels = {
   Client: "Клиент",
   Operator: "Оператор",
@@ -36,15 +33,6 @@ function closeOverlaysOnEscape(event: KeyboardEvent) {
   if (event.key === "Escape") {
     menuOpen.value = false;
     notificationsOpen.value = false;
-  }
-}
-
-async function logout() {
-  logoutError.value = "";
-  try {
-    await logoutUser();
-  } catch (failure: unknown) {
-    logoutError.value = getApiErrorMessage(failure);
   }
 }
 </script>
@@ -118,12 +106,6 @@ async function logout() {
           roleLabels[authUser?.role ?? "Operator"]
         }}</span>
       </NuxtLink>
-      <button class="profile-link logout-button" type="button" @click="logout">
-        Выйти
-      </button>
-      <p v-if="logoutError" class="form-error header-error" role="alert">
-        {{ logoutError }}
-      </p>
     </nav>
   </header>
 </template>

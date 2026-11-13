@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { helpArticles, helpCategories } from "~/data/public-content";
+import { helpArticles, helpCategories } from "#shared/data/public-content";
 
 definePageMeta({ layout: "public" });
 const route = useRoute();

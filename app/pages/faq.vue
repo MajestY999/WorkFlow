@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { frequentlyAskedQuestions } from "~/data/public-content";
+import { frequentlyAskedQuestions } from "#shared/data/public-content";
 
 definePageMeta({ layout: "public" });
 usePublicSeo(

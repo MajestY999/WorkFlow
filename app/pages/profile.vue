@@ -165,10 +165,6 @@ async function saveProfile() {
       >
     </section>
     <div class="profile-logout">
-      <div>
-        <strong>Завершить работу?</strong>
-        <span>Вы вернётесь на главную страницу.</span>
-      </div>
       <button class="button button-outline" type="button" @click="logout">
         Выйти из аккаунта
       </button>

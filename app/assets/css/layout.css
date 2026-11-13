@@ -46,28 +46,6 @@
   align-items: center;
   gap: 10px;
 }
-.logout-button {
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 4px;
-  color: #c4c1dc;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-}
-.logout-button:hover {
-  color: #fff;
-  background: rgba(57, 54, 111, 0.55);
-}
-.logout-button:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: 2px;
-}
-.header-error {
-  max-width: 220px;
-  margin: 0;
-  font-size: 11px;
-}
 .profile-link[aria-current="page"] .profile-name {
   color: #fff;
 }

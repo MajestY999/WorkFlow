@@ -24,12 +24,12 @@ Nuxt выведет адрес приложения; обычно это `http:/
 
 Заполнение базы создаёт демонстрационные учётные записи и заявки. Для локального входа можно использовать:
 
-| Роль | Электронная почта | Пароль |
-| --- | --- | --- |
-| Администратор | `admin@workflow.local` | `Admin123!` |
-| Оператор | `operator@workflow.local` | `Operator123!` |
-| Исполнитель | `agent.brungilda@workflow.local` | `Agent123!` |
-| Клиент | `client1@workflow.local` | `Client123!` |
+| Роль          | Электронная почта                | Пароль         |
+| ------------- | -------------------------------- | -------------- |
+| Администратор | `admin@workflow.local`           | `Admin123!`    |
+| Оператор      | `operator@workflow.local`        | `Operator123!` |
+| Исполнитель   | `agent.brungilda@workflow.local` | `Agent123!`    |
+| Клиент        | `client1@workflow.local`         | `Client123!`   |
 
 Чтобы заменить демонстрационные пароли, задайте `WORKFLOW_ADMIN_PASSWORD`, `WORKFLOW_OPERATOR_PASSWORD`, `WORKFLOW_AGENT_PASSWORD` и/или `WORKFLOW_CLIENT_PASSWORD` перед `npm run db:seed`. Заполнять базу в режиме `NODE_ENV=production` нельзя. Не используйте демонстрационные учётные данные вне локальной разработки.
 

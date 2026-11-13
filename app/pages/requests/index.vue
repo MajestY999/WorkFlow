@@ -52,9 +52,7 @@ const filters = reactive<{
   sort: isRequestSort(initialSort) ? initialSort : "newest",
 });
 const debouncedSearch = useDebounce(toRef(filters, "search"), 350);
-const searchIsDirty = computed(
-  () => filters.search.trim() !== queryValue(route.query.q),
-);
+const pendingSearchQuery = ref<string | null>(null);
 const lookups = await useRequestLookups();
 const ownCustomer = computed(() =>
   lookups.customers.value.find(
@@ -173,7 +171,10 @@ function updateQuery(patch: Record<string, string | number | undefined>) {
 }
 
 watch(debouncedSearch, (search) => {
-  updateQuery({ q: search.trim() || undefined, page: undefined });
+  const query = search.trim();
+  if (queryValue(route.query.q) === query) return;
+  pendingSearchQuery.value = query;
+  updateQuery({ q: query || undefined, page: undefined });
 });
 
 watch(
@@ -190,15 +191,23 @@ watch(
 );
 
 watch(
+  () => route.query.q,
+  (value) => {
+    const search = queryValue(value);
+    if (pendingSearchQuery.value === search) {
+      pendingSearchQuery.value = null;
+      return;
+    }
+    filters.search = search;
+  },
+);
+
+watch(
   () => route.query,
   (query) => {
-    const search = queryValue(query.q);
     const status = queryValue(query.status);
     const priority = queryValue(query.priority);
     const sort = queryValue(query.sort);
-    if (filters.search.trim() !== search && !searchIsDirty.value) {
-      filters.search = search;
-    }
     if (filters.status !== (isRequestStatus(status) ? status : "")) {
       filters.status = isRequestStatus(status) ? status : "";
     }

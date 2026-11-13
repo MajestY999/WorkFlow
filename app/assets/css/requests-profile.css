@@ -173,30 +173,7 @@
 .profile-logout {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 18px 4px 0;
-  border-top: 1px solid rgba(57, 54, 111, 0.65);
-}
-.profile-logout > div {
-  display: grid;
-  gap: 5px;
-}
-.profile-logout strong {
-  color: #e4e1f4;
-  font-size: 13px;
-}
-.profile-logout span {
-  color: var(--muted);
-  font-size: 11px;
-}
-.profile-logout .button {
-  border-color: rgba(255, 125, 154, 0.3);
-  color: #ff9aaf;
-}
-.profile-logout .button:hover {
-  border-color: #ff7d9a;
-  background: rgba(255, 125, 154, 0.08);
+  margin-top: 20px;
 }
 @media (max-width: 640px) {
   .pagination-bar {

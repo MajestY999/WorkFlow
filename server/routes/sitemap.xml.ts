@@ -1,4 +1,4 @@
-import { helpArticles, helpCategories } from "../../app/data/public-content";
+import { helpArticles, helpCategories } from "../../shared/data/public-content";
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event);
